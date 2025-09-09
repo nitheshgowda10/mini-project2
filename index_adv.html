@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signup - Advanced (Confirm + Popup)</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding:20px; max-width:560px; margin:auto; }
+    .form-control { margin-bottom:12px; }
+    label { display:block; margin-bottom:6px; font-weight:700; }
+    input { width:100%; padding:8px; box-sizing:border-box; }
+    small { display:block; height:16px; margin-top:4px; font-size:13px;}
+    .error small{ color:#c53030; } .error input{ border:1px solid #c53030; }
+    .success small{ color:#2f855a; } .success input{ border:1px solid #2f855a; }
+    button{ padding:10px 14px; cursor:pointer; }
+
+    /* modal styles */
+    .modal-backdrop {
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background: rgba(0,0,0,0.4);
+    }
+    .modal {
+      background:white; padding:20px; border-radius:8px; width:90%; max-width:420px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.2); text-align:center;
+    }
+    .modal button { margin-top:12px; }
+  </style>
+</head>
+<body>
+
+  <h2>Advanced Signup</h2>
+
+  <form id="formAdvanced" novalidate>
+    <div class="form-control" id="c-username">
+      <label for="usernameA">Username</label>
+      <input id="usernameA" />
+      <small></small>
+    </div>
+
+    <div class="form-control" id="c-email">
+      <label for="emailA">Email</label>
+      <input id="emailA" />
+      <small></small>
+    </div>
+
+    <div class="form-control" id="c-password">
+      <label for="passwordA">Password</label>
+      <input id="passwordA" type="password" />
+      <small></small>
+    </div>
+
+    <div class="form-control" id="c-confirm">
+      <label for="confirmA">Confirm Password</label>
+      <input id="confirmA" type="password" />
+      <small></small>
+    </div>
+
+    <button type="submit">Register</button>
+  </form>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3 id="modalTitle">Registration Successful 🎉</h3>
+      <p id="modalMsg">Welcome! Your account is ready.</p>
+      <button id="closeModalBtn">Close</button>
+    </div>
+  </div>
+
+<script>
+  // advanced inline JS
+  const form = document.getElementById('formAdvanced');
+  const username = document.getElementById('usernameA');
+  const email = document.getElementById('emailA');
+  const password = document.getElementById('passwordA');
+  const confirm = document.getElementById('confirmA');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+
+  function showError(input, message) {
+    const c = input.parentElement;
+    c.classList.remove('success'); c.classList.add('error');
+    c.querySelector('small').innerText = message;
+  }
+  function showSuccess(input, message='') {
+    const c = input.parentElement;
+    c.classList.remove('error'); c.classList.add('success');
+    c.querySelector('small').innerText = message;
+  }
+  function getName(input) { return input.id.replace(/A$/, '').replace(/^[a-z]/, s=>s.toUpperCase()); }
+
+  function checkRequired(inputs){
+    let ok = true;
+    inputs.forEach(i => {
+      if (i.value.trim() === '') { showError(i, `${getName(i)} is required`); ok = false; }
+      else showSuccess(i);
+    });
+    return ok;
+  }
+
+  function isValidEmail(input) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (re.test(input.value.trim())) { showSuccess(input); return true; }
+    showError(input, 'Enter a valid email'); return false;
+  }
+
+  function checkPasswordMatch(p, c) {
+    if (p.value !== c.value) { showError(c, 'Passwords do not match'); return false; }
+    showSuccess(c); return true;
+  }
+
+  function checkLength(input, min) {
+    if (input.value.length < min) { showError(input, `${getName(input)} must be ${min}+ chars`); return false; }
+    showSuccess(input); return true;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const requiredOK = checkRequired([username,email,password,confirm]);
+    const emailOK = isValidEmail(email);
+    const passLenOK = checkLength(password,6);
+    const matchOK = checkPasswordMatch(password, confirm);
+
+    if (requiredOK && emailOK && passLenOK && matchOK) {
+      // show modal popup
+      modalBackdrop.style.display = 'flex';
+      modalBackdrop.setAttribute('aria-hidden','false');
+      // reset form after show
+      form.reset();
+      // remove success classes for a clean form
+      [username,email,password,confirm].forEach(i => i.parentElement.classList.remove('success'));
+    }
+  });
+
+  // close modal
+  closeModalBtn.addEventListener('click', () => {
+    modalBackdrop.style.display = 'none';
+    modalBackdrop.setAttribute('aria-hidden','true');
+  });
+
+  // small real time checks
+  email.addEventListener('input', () => {
+    if (email.value.trim() === '') { email.parentElement.classList.remove('error','success'); email.parentElement.querySelector('small').innerText=''; return; }
+    isValidEmail(email);
+  });
+
+  confirm.addEventListener('input', () => {
+    if (confirm.value === '') { confirm.parentElement.classList.remove('error','success'); confirm.parentElement.querySelector('small').innerText=''; return; }
+    checkPasswordMatch(password, confirm);
+  });
+
+</script>
+</body>
+</html>
